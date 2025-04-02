@@ -9,8 +9,9 @@ class Snake {
    * @param {int} scale
    * @param {int} xPad
    * @param {int} yPad
+   * @param {NeuralNetwork} brain
    */
-  constructor(scale, xPad, yPad) {
+  constructor(scale, xPad, yPad, brain) {
     this.SQUARESIZE = 20;
     this.FPS = 10; // 10 should be fine to scale up with
     this.INTERVAL = 1000 / this.FPS;
@@ -33,6 +34,16 @@ class Snake {
     this.apple;
     this.gameOver = false;
     this.SnakeBody = new SnakeBody(20, 20, 10);
+
+    if (brain) {
+      this.brain = brain.copy();
+    } else {
+      /*
+        as far as inputs go we have the whole game board so 40x40
+        output we'll just do the 4 directions to start
+      */
+      this.brain = new NeuralNetwork(1600, 32, 4);
+    }
 
     this.createGrid(40, 40);
     this.spawnApple();
@@ -152,6 +163,7 @@ class Snake {
       this.then = this.now - (this.delta % this.INTERVAL);
 
       if (!this.gameOver) {
+        this.think();
         this.SnakeBody.moveForward();
         this.detectEvent();
         this.framecount = 0;
@@ -285,4 +297,47 @@ class Snake {
     // printGrid();
     cancelAnimationFrame(this.requestID);
   }
+
+  /**
+   * @description returns the snakes score
+   * @return {int} score
+   */
+  getScore() {
+    return this.score;
+  }
+
+  /**
+   * @description todo
+   */
+  think() {
+    // tell brain to predict based on inputs
+    const action = this.brain.predict(this.grid);
+    // then determine which way we are rotating
+    this.SnakeBody.turn(action+1);
+  }
+
+  /**
+   * @description todo
+   */
+  dispose() {
+    this.brain.dispose();
+  }
+
+  /**
+   * @description todo
+   * @param {float} rate
+   */
+  mutate(rate) {
+    this.brain.mutate(rate);
+  }
 }
+
+
+/**
+ * need to add 
+ * - some junk in constructor
+ * - think
+ * - normalizeInputs
+ * - dispose
+ * - mutate
+ */

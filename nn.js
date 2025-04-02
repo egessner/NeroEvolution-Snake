@@ -20,7 +20,7 @@ class NeuralNetwork {
    */
   constructor(inputNodes, hiddenNodes, outputNodes, model) {
     if (model instanceof tf.Sequential) {
-      this.input_nodes = inputNodes;
+      this.input_nodes = inputNodes; // these are hard coded in our createmodel
       this.hidden_nodes = hiddenNodes;
       this.output_nodes = outputNodes;
       this.model = model;
@@ -42,7 +42,7 @@ class NeuralNetwork {
       const weights = this.model.getWeights();
       const weightCopies = [];
       for (let i = 0; i < weights.length; i++) {
-        weightCopies[i] = weights[i].clone();
+        weightCopies[i] = weights[i].clone(true);
       }
       modelCopy.setWeights(weightCopies);
       return new NeuralNetwork(
@@ -88,16 +88,18 @@ class NeuralNetwork {
 
   /**
    * @description
-   * @param {*} inputs
-   * @return {*}
+   * @param {Array} inputs
+   * @return {*} action
    */
   predict(inputs) {
     return tf.tidy(() => {
-      const xs = tf.tensor2d([inputs]);
+      // we can not normalize in the future if we change the vlaues of our grid
+      const normalizedInputs = inputs.map((row) =>
+        row.map((value) => [value / 3]));
+      const xs = tf.tensor4d([normalizedInputs], [1, 40, 40, 1]);
       const ys = this.model.predict(xs);
-      const outputs = ys.dataSync();
-      // console.log(outputs);
-      return outputs;
+      const action = ys.argMax(1).dataSync()[0];
+      return action;
     });
   }
 
@@ -107,17 +109,20 @@ class NeuralNetwork {
    */
   createModel() {
     const model = tf.sequential();
-    const hidden = tf.layers.dense({
-      units: this.hidden_nodes,
-      inputShape: [this.input_nodes],
-      activation: 'sigmoid',
-    });
-    model.add(hidden);
-    const output = tf.layers.dense({
-      units: this.output_nodes,
-      activation: 'softmax',
-    });
-    model.add(output);
+    // going to hardcode this at first
+    model.add(tf.layers.conv2d({
+      inputShape: [40, 40, 1], // 40x40 grid with 1 channel
+      filters: 32, // Try 32, increase to 64 if needed
+      kernelSize: 3, // Small 3x3 filters to capture local patterns
+      strides: 1,
+      activation: 'relu',
+      padding: 'same', // Keeps output size the same as input
+    }));
+    model.add(tf.layers.conv2d({filters: 64, kernelSize: 3,
+      activation: 'relu', padding: 'same'}));
+    model.add(tf.layers.flatten()); 
+    model.add(tf.layers.dense({units: 128, activation: 'relu'}));
+    model.add(tf.layers.dense({units: 4, activation: 'softmax'}));
     return model;
   }
 
