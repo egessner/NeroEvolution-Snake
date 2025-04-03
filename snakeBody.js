@@ -99,6 +99,14 @@ class SnakeBody {
   }
 
   /**
+   * @description returns the direction the head is facing
+   * @return {int} headdirection
+   */
+  getHeadDirection() {
+    return this.headDirection;
+  }
+
+  /**
    * @description return the length
    * @return {int} length
    */

@@ -8,7 +8,7 @@ let n;
 let snakeArr;
 let gen;
 let parents = [];
-const mutationRate = .1;
+const mutationRate = .25;
 
 /**
  * @description init everythingt and begin each snake instance
@@ -122,6 +122,7 @@ function nextGeneration() {
   console.log('Generation: ' + gen);
   gen++;
 
+  snakeArr.forEach((row) => row.forEach((snake) => snake.setupDraw()));
   snakeArr.forEach((row) => row.forEach((snake) => snake.run()));
 }
 

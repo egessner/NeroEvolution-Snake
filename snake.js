@@ -31,6 +31,7 @@ class Snake {
 
     this.grid;
     this.score = 0;
+    this.fitness = 0;
     this.apple;
     this.gameOver = false;
     this.SnakeBody = new SnakeBody(20, 20, 10);
@@ -166,9 +167,10 @@ class Snake {
         this.think();
         this.SnakeBody.moveForward();
         this.detectEvent();
-        this.framecount = 0;
+        // this.framecount = 0;
         this.updateGrid();
         this.draw();
+        this.foo();
       }
     }
     if (!this.gameOver) {
@@ -294,6 +296,8 @@ class Snake {
    */
   killGame() {
     this.gameOver = true;
+    this.score += this.fitness;
+    this.score += this.framecount / 5;
     // printGrid();
     cancelAnimationFrame(this.requestID);
   }
@@ -329,6 +333,31 @@ class Snake {
    */
   mutate(rate) {
     this.brain.mutate(rate);
+  }
+
+  /**
+   * @description find a better name later lets just test now
+   */
+  foo() {
+    // the idea is when our head is pointed towards the same y or x value
+    // as the apple after think, we reward with a .5 point or something
+    // so if its 1 or 3 lets check the apples y and 2 or 4 we check x
+    // this code about to be crusty as hell
+    const headPosition = this.SnakeBody.getHeadPosition();
+    switch (this.SnakeBody.getHeadDirection()) {
+      case 1: // north
+        this.fitness += headPosition[1] > this.apple[1] ? .5: -.1;
+        break;
+      case 2: // east
+        this.fitness += headPosition[0] < this.apple[0] ? .5: -.1;
+        break;
+      case 3: // south
+        this.fitness += headPosition[1] < this.apple[1] ? .5: -.1;
+        break;
+      case 4: // west
+        this.fitness += headPosition[0] > this.apple[0] ? .5: -.1;
+        break;
+    }
   }
 }
 
